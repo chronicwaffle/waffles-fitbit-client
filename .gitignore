@@ -1,0 +1,10 @@
+# Ignore all .env files
+.env*
+# Re-include the example file that has no secrets
+!.env.example
+
+# Ignore node_modules
+node_modules/
+
+# My fitbit app config
+app.md 
