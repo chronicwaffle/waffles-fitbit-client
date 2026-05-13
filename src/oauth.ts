@@ -63,7 +63,7 @@ export function buildAuthUrl(state: string): string {
  * Start a one-shot local callback server and wait for Fitbit to redirect
  * with a ?code=... value.
  */
-export function waitForOAuthCode(port = 3000, timeoutMs = 120_000): Promise<string> {
+export function waitForOAuthCode(port = 3000, timeoutMs = 120_000): Promise<{ code: string; state: string | null }> {
   const callbackPath = new URL(REDIRECT_URI).pathname;
 
   return new Promise((resolve, reject) => {
@@ -83,6 +83,8 @@ export function waitForOAuthCode(port = 3000, timeoutMs = 120_000): Promise<stri
       }
 
       const code = url.searchParams.get("code");
+      const state = url.searchParams.get("state");
+      const error = url.searchParams.get("error");
 
       res.writeHead(200, { "Content-Type": "text/html" });
       res.end("<h1>Authentication successful. You may close this tab.</h1>");
@@ -90,8 +92,13 @@ export function waitForOAuthCode(port = 3000, timeoutMs = 120_000): Promise<stri
       clearTimeout(timer);
       server.close();
 
+      if (error) {
+        reject(new Error(`Authorization denied: ${error}`));
+        return;
+      }
+
       if (code) {
-        resolve(code);
+        resolve({ code, state });
         return;
       }
 
@@ -156,7 +163,12 @@ export async function loginViaEphemeralCallbackServer(port = 3000): Promise<void
   console.log(authUrl);
   console.log(`\nWaiting for callback on http://localhost:${port}${new URL(REDIRECT_URI).pathname} ...`);
 
-  const code = await waitForOAuthCode(port);
+  const { code, state: callbackState } = await waitForOAuthCode(port);
+
+  if (callbackState !== state) {
+    throw new Error("OAuth state mismatch in callback");
+  }
+
   const tokens = await exchangeCodeForTokens(code);
   saveTokens(tokens);
 
