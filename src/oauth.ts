@@ -4,6 +4,7 @@
  * Reference: https://dev.fitbit.com/build/reference/web-api/developer-guide/authorization/
  */
 
+import http from "node:http";
 import { getTokens, saveTokens, type TokenData } from "./tokenStore.js";
 
 // ---------------------------------------------------------------------------
@@ -59,6 +60,61 @@ export function buildAuthUrl(state: string): string {
 }
 
 /**
+ * Start a one-shot local callback server and wait for Fitbit to redirect
+ * with a ?code=... value.
+ */
+export function waitForOAuthCode(port = 3000, timeoutMs = 120_000): Promise<{ code: string; state: string | null }> {
+  const callbackPath = new URL(REDIRECT_URI).pathname;
+
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => {
+      server.close(() => {
+        reject(new Error(`OAuth callback timed out after ${timeoutMs} ms`));
+      });
+    }, timeoutMs);
+
+    const server = http.createServer((req, res) => {
+      const url = new URL(req.url ?? "", `http://localhost:${port}`);
+
+      if (url.pathname !== callbackPath) {
+        res.writeHead(404, { "Content-Type": "text/plain" });
+        res.end("Not found");
+        return;
+      }
+
+      const code = url.searchParams.get("code");
+      const state = url.searchParams.get("state");
+      const error = url.searchParams.get("error");
+
+      res.writeHead(200, { "Content-Type": "text/html" });
+      res.end("<h1>Authentication successful. You may close this tab.</h1>");
+
+      clearTimeout(timer);
+      server.close();
+
+      if (error) {
+        reject(new Error(`Authorization denied: ${error}`));
+        return;
+      }
+
+      if (code) {
+        resolve({ code, state });
+        return;
+      }
+
+      reject(new Error("No code found in callback"));
+    });
+
+    server.on("error", (error) => {
+      clearTimeout(timer);
+      reject(error);
+    });
+
+    server.listen(port);
+  });
+}
+
+/**
  * Exchange an authorization code for access + refresh tokens.
  * Step 2 of the OAuth flow.
  */
@@ -94,6 +150,29 @@ export async function exchangeCodeForTokens(
 
   const json = (await response.json()) as FitbitTokenResponse;
   return toTokenData(json);
+}
+
+/**
+ * Run the interactive CLI login flow.
+ */
+export async function loginViaEphemeralCallbackServer(port = 3000): Promise<void> {
+  const state = Math.random().toString(36).slice(2);
+  const authUrl = buildAuthUrl(state);
+
+  console.log("Open this URL on any device to authorize Fitbit:");
+  console.log(authUrl);
+  console.log(`\nWaiting for callback on http://localhost:${port}${new URL(REDIRECT_URI).pathname} ...`);
+
+  const { code, state: callbackState } = await waitForOAuthCode(port);
+
+  if (callbackState !== state) {
+    throw new Error("OAuth state mismatch in callback");
+  }
+
+  const tokens = await exchangeCodeForTokens(code);
+  saveTokens(tokens);
+
+  console.log("Authentication successful. Tokens saved.");
 }
 
 /**
@@ -137,7 +216,7 @@ async function refreshAccessToken(refreshToken: string): Promise<TokenData> {
 export async function ensureValidAccessToken(): Promise<string> {
   const tokens = getTokens();
   if (!tokens) {
-    throw new Error("Not authorised. Visit /login to start the OAuth flow.");
+    throw new Error("Not authorised. Run `npm run login` to start the OAuth flow.");
   }
 
   // Refresh 60 s before actual expiry to avoid edge-case failures.
