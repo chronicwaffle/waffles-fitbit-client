@@ -4,8 +4,6 @@
   "description": "Personal Fitbit OAuth 2.0 client for health data insights",
   "main": "dist/server.js",
   "scripts": {
-    "build": "tsc",
-    "start": "node dist/server.js",
     "dev": "ts-node src/server.ts",
     "lint": "eslint src/**/*.ts",
     "login": "ts-node src/sync.ts --login"
