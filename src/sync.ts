@@ -10,7 +10,7 @@ async function main(): Promise<void> {
     return;
   }
 
-  await loginViaEphemeralCallbackServer(3000); // ? Port number for the ephemeral callback server
+  await loginViaEphemeralCallbackServer(3000); // Port number for the ephemeral callback server
 }
 
 main().catch((error: unknown) => {

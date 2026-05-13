@@ -1,6 +1,6 @@
 /**
  * oauth.ts
- * Handles the Fitbit OAuth 2.0 Authorization Code flow.
+ * Handles the Fitbit OAuth 2.0 Authorization Code flow...
  * Reference: https://dev.fitbit.com/build/reference/web-api/developer-guide/authorization/
  */
 
