@@ -7,7 +7,8 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "dev": "ts-node src/server.ts",
-    "lint": "eslint src/**/*.ts"
+    "lint": "eslint src/**/*.ts",
+    "login": "ts-node src/sync.ts --login"
   },
   "dependencies": {
     "dotenv": "^16.4.5",
