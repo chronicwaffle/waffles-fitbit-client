@@ -29,7 +29,11 @@ import { getUserProfile, getTodayActivities } from "./fitbit.js";
 const app = express();
 const PORT = process.env.PORT ?? "3000";
 
-const SESSION_SECRET = process.env.SESSION_SECRET;
+const sessionSecret = require('crypto').randomBytes(32).toString('hex');
+process.env.SESSION_SECRET = sessionSecret;
+console.log(sessionSecret);
+
+const SESSION_SECRET = process.env.SESSION_SECRET ?? sessionSecret
 if (!SESSION_SECRET) {
   throw new Error("Missing required environment variable: SESSION_SECRET");
 }
