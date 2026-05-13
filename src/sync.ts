@@ -5,12 +5,12 @@ async function main(): Promise<void> {
   const wantsLogin = process.argv.includes("--login");
 
   if (!wantsLogin) {
-    console.log("Usage: tsx src/sync.ts --login");
+    console.log("Usage: npm run login");
     process.exitCode = 1;
     return;
   }
 
-  await loginViaEphemeralCallbackServer(3000);
+  await loginViaEphemeralCallbackServer(3000); // ? Port number for the ephemeral callback server
 }
 
 main().catch((error: unknown) => {
