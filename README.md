@@ -8,8 +8,8 @@ This application is for personal use only. No data is shared with third parties.
 
 This repo now supports an **ephemeral local callback server** for OAuth login:
 
-1. Set `FITBIT_REDIRECT_URI` to a reverse-proxied URL (for example `https://auth.example.local/fitbit`).
-2. Route that path to `localhost:3000` on the machine running this CLI (for example with Caddy + Tailscale/LAN).
+1. Set `FITBIT_REDIRECT_URI` to a reverse-proxied URL (for example `https://auth.jasonminiserver.local/fitbit`).
+2. Route that path to `localhost:3000` on the machine running this CLI (for example with Caddy + Tailscale/LAN). :) :)
 3. Run:
 
 ```bash

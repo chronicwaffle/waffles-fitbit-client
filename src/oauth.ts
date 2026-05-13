@@ -8,7 +8,7 @@ import http from "node:http";
 import { getTokens, saveTokens, type TokenData } from "./tokenStore.js";
 
 // ---------------------------------------------------------------------------
-// Types and interfaces :(
+// Types and interfaces :( :) 😊...
 // ---------------------------------------------------------------------------
 
 /** Shape of the JSON body returned by Fitbit's token endpoint. */
